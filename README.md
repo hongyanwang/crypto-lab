@@ -1,2 +1,2 @@
-## crypto-lab
-cryptography algorithms implementation
+# crypto-lab
+cryptographic algorithms implementations
