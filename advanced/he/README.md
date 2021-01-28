@@ -26,10 +26,5 @@ Otherwise, you will get an unexpected result.
 $ go test .
 ```
 
-## 3. GSW
-```bash
-$ go test .
-```
-
 ## Reference
 HE: https://en.wikipedia.org/wiki/Homomorphic_encryption
