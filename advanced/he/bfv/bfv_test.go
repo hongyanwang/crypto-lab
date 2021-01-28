@@ -2,19 +2,20 @@ package bfv
 
 import (
 	"fmt"
+	"math"
 	"testing"
 
 	"github.com/ldsec/lattigo/v2/bfv"
 )
 
 func TestBFV(t *testing.T) {
-	// plaintext modulus is 65929217
-	params := SetParams(1, 0x3ee0001)
+	// plaintext modulus is 549755731969, between 2^38 and 2^39
+	params := SetParams(1, 0x7ffffec001)
 
 	sk, pk := GenKeyPair(params)
 
-	plain1 := uint64(2048)
-	plain2 := uint64(4096)
+	plain1 := uint64(math.Pow(2, 10))
+	plain2 := uint64(math.Pow(2, 12))
 
 	cipher1 := Encrypt(params, pk, plain1)
 	cipher2 := Encrypt(params, pk, plain2)
