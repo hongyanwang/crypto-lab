@@ -1,22 +1,22 @@
 # crypto-lab
-cryptographic algorithms implementation
+Golang implementation of cryptographic algorithms 
 
 ## 1. traditional
 traditional cryptosystems
 
 ## 2. symmetric
-symmetric cryptosystems, includes DES, AES...
+symmetric cryptosystems, include DES, AES...
 
 ## 3. asymmetric
-asymmetric cryptosystems, includes RSA, Paillier, ECDSA, SM2, Schnnor, BLS...
+asymmetric cryptosystems, include RSA, Paillier, ECDSA, SM2, Schnnor, BLS...
 - paillier
 - rsa
 
 ## 4. hash
-hash functions, includes SHA2, SHA3...
+hash functions, include SHA2, SHA3, blake2b...
 
 ## 5. advanced
-advanced cryptosystem, includes HE, MPC, ZKP...
+advanced cryptosystems, include HE, MPC, ZKP...
 - hd: hierarchical deterministic encryption
 - he: fully homomorphic encryption
 - mpc: multi-party computation related algorithms
