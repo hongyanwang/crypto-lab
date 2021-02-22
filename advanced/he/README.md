@@ -10,7 +10,7 @@ We import or wrap these projects to achieve FHE encryption, decryption and evalu
 | --------- | -------   | -------- | ------ |
 | Lattigo   | BFV, CKKS | Go       | https://github.com/lca1/lattigo | 
 | TFHE      | GSW       | C++      | https://github.com/tfhe/tfhe | 
-| Palisade  | BFV, BGV, GSW, CKKS  | C++  |  |  
+| Palisade  | BFV, BGV, GSW, CKKS  | C++  | https://gitlab.com/palisade/palisade-release/-/tree/master |  
 
 We mainly use Lattigo and TFHE.
 
