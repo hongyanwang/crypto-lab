@@ -131,7 +131,7 @@ func permutation1(x uint32) uint32 {
 	return x ^ (leftRotate(x, 15)) ^ (leftRotate(x, 23))
 }
 
-// leftRotate
+// leftRotate cyclic left shift
 func leftRotate(x uint32, i uint32) uint32 {
 	return x<<(i%32) | x>>(32-i%32)
 }
