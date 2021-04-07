@@ -24,3 +24,5 @@ advanced cryptosystems, include HE, MPC, ZKP...
 - he: fully homomorphic encryption
 - mpc: multi-party computation related algorithms
 - post: proof of space-time based on bilinear pairing
+- ring_sign: ring signature based on RSA
+- linkable_ring_sign: linkable ring signature based on RSA
