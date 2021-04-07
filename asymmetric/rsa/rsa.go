@@ -12,22 +12,21 @@ var zero = big.NewInt(0)
 // PrivateKey represents a RSAA private key
 type PrivateKey struct {
 	PublicKey
-	P			*big.Int	// P and Q are primes with same length
-	Q			*big.Int
-	N			*big.Int	// N=P*Q
-	Phi			*big.Int	// Phi=(P-1)(Q-1)
-	D			*big.Int	// D = e^-1 (mod phi)
+	P   *big.Int // P and Q are primes with same length
+	Q   *big.Int
+	Phi *big.Int // Phi=(P-1)(Q-1)
+	D   *big.Int // D = e^-1 (mod phi)
 }
 
 // PublicKey represents a Paillier public key
 type PublicKey struct {
-	N        *big.Int	// N=P*Q
-	E        *big.Int	// 0 < E < phi，&& e and phi are coprime
+	N *big.Int // N=P*Q
+	E *big.Int // 0 < E < phi，&& e and phi are coprime
 }
 
 // GenerateKey generates a rsa private key
 func GenerateKey(secbit int) (*PrivateKey, error) {
-	keylen := secbit/2
+	keylen := secbit / 2
 	p, err := rand.Prime(rand.Reader, keylen)
 	if err != nil {
 		return nil, err
@@ -36,7 +35,7 @@ func GenerateKey(secbit int) (*PrivateKey, error) {
 	if err != nil {
 		return nil, err
 	}
-	n := new(big.Int).Mul(p,q)
+	n := new(big.Int).Mul(p, q)
 	phi := new(big.Int).Mul(new(big.Int).Sub(p, one), new(big.Int).Sub(q, one))
 	// e cannot be zero, e and phi must be coprime
 	var e *big.Int
@@ -53,14 +52,13 @@ func GenerateKey(secbit int) (*PrivateKey, error) {
 	d := new(big.Int).ModInverse(e, phi)
 	return &PrivateKey{
 		PublicKey: PublicKey{
-			N:        n,
-			E:        e,
+			N: n,
+			E: e,
 		},
-		P: p,
-		Q: q,
-		N: n,
+		P:   p,
+		Q:   q,
 		Phi: phi,
-		D: d,
+		D:   d,
 	}, nil
 }
 
@@ -85,7 +83,7 @@ func RSADecrypt(c *big.Int, prvkey *PrivateKey) (*big.Int, error) {
 
 // homomorphic encryption
 func RSAMul(cipher1, cipher2 *big.Int, pubkey *PublicKey) *big.Int {
-	return new(big.Int).Mod(new(big.Int).Mul(cipher1,cipher2), pubkey.N)
+	return new(big.Int).Mod(new(big.Int).Mul(cipher1, cipher2), pubkey.N)
 }
 
 // signature and verification
@@ -112,4 +110,3 @@ func RSAVerify(m *big.Int, sig *big.Int, pubkey *PublicKey) (bool, error) {
 	}
 	return false, nil
 }
-
