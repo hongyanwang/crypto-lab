@@ -59,7 +59,7 @@ func Sign(partnerPubkeys []*rsa.PublicKey, privkey *rsa.PrivateKey, msg []byte) 
 			if i == int(index.Int64()) {
 				continue
 			}
-			xs[i], err = rand.Int(rand.Reader, minN(allPubkeys))
+			xs[i], err = rand.Int(rand.Reader, allPubkeys[i].N)
 			if err != nil {
 				return nil, fmt.Errorf("failed to generate random number list xs, err: %v", err)
 			}
