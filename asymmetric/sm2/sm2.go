@@ -123,3 +123,34 @@ func ZA(pubkey PublicKey, id []byte) []byte {
 	msg = append(msg, pubkey.Y.Bytes()...)
 	return sm3.SM3(msg)
 }
+
+// KDF key derivation function
+func KDF(klen int, z []byte) ([]byte, error) {
+	var ct uint32 = 0x00000001
+
+	d := klen / 256
+	var totalRound int
+	if d*256 == klen {
+		totalRound = d
+	} else {
+		totalRound = d + 1
+	}
+	ha := make([][]byte, totalRound)
+	for i := 1; i < totalRound; i++ {
+		var msg []byte
+		binary.BigEndian.PutUint32(msg, ct)
+		msg = append(z, msg...)
+		ha[i-1] = sm3.SM3(msg)
+		ct = ct + 1
+	}
+
+	var ret []byte
+	for _, b := range ha {
+		ret = append(ret, b...)
+	}
+	if totalRound != d {
+		copy(ret[:], ret[:klen])
+	}
+
+	return ret, nil
+}
