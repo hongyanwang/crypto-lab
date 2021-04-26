@@ -11,7 +11,7 @@ import (
 
 var (
 	DefaultCurveType = elliptic.P256()
-	DefaultMsgLen = 2
+	DefaultMsgLen    = 2
 
 	minusOne = new(big.Int).SetInt64(-1)
 	// note: -P = (-1)*P = [(-1) mod N] * P
@@ -20,12 +20,12 @@ var (
 
 // CipherM encrypted message structure
 type CipherM struct {
-	RG    *ecdsa.PublicKey
-	EncM	*big.Int
+	RG   *ecdsa.PublicKey
+	EncM *big.Int
 }
 
 // ComputePKs compute public keys based on given c, return random k and PK0
-func ComputePKs(c *big.Int, index int) (*big.Int, *ecdsa.PublicKey, error){
+func ComputePKs(c *big.Int, index int) (*big.Int, *ecdsa.PublicKey, error) {
 	// random k
 	k, err := rand.Int(rand.Reader, DefaultCurveType.Params().N)
 	if err != nil {
@@ -33,25 +33,25 @@ func ComputePKs(c *big.Int, index int) (*big.Int, *ecdsa.PublicKey, error){
 	}
 
 	// pkb = kG
-	x, y :=  DefaultCurveType.ScalarBaseMult(k.Bytes())
+	x, y := DefaultCurveType.ScalarBaseMult(k.Bytes())
 
 	// pk_{1-b} = cG-pkb
-	cGx, cGy :=  DefaultCurveType.ScalarBaseMult(c.Bytes())
-	mx, my :=  DefaultCurveType.ScalarMult(x, y, minusOneModN.Bytes())
+	cGx, cGy := DefaultCurveType.ScalarBaseMult(c.Bytes())
+	mx, my := DefaultCurveType.ScalarMult(x, y, minusOneModN.Bytes())
 	pkx, pky := DefaultCurveType.Add(cGx, cGy, mx, my)
 
 	if index == 0 {
 		pk0 := &ecdsa.PublicKey{
 			Curve: DefaultCurveType,
-			X: x,
-			Y: y,
+			X:     x,
+			Y:     y,
 		}
 		return k, pk0, nil
 	} else if index == 1 {
 		pk0 := &ecdsa.PublicKey{
 			Curve: DefaultCurveType,
-			X: pkx,
-			Y: pky,
+			X:     pkx,
+			Y:     pky,
 		}
 		return k, pk0, nil
 	}
@@ -64,8 +64,8 @@ func ComputeCs(c *big.Int, pk0 *ecdsa.PublicKey, ms []*big.Int) ([]CipherM, erro
 		return nil, fmt.Errorf("invalid messaage length, supposed to be %d", DefaultMsgLen)
 	}
 	// pk1 = cG-pk0
-	cGx, cGy :=  DefaultCurveType.ScalarBaseMult(c.Bytes())
-	nx, ny :=  DefaultCurveType.ScalarMult(pk0.X, pk0.Y, minusOneModN.Bytes())
+	cGx, cGy := DefaultCurveType.ScalarBaseMult(c.Bytes())
+	nx, ny := DefaultCurveType.ScalarMult(pk0.X, pk0.Y, minusOneModN.Bytes())
 	pk1x, pk1y := DefaultCurveType.Add(cGx, cGy, nx, ny)
 
 	// random r0 and r1
@@ -93,18 +93,18 @@ func ComputeCs(c *big.Int, pk0 *ecdsa.PublicKey, ms []*big.Int) ([]CipherM, erro
 	c0 := CipherM{
 		RG: &ecdsa.PublicKey{
 			Curve: DefaultCurveType,
-			X: r0Gx,
-			Y: r0Gy,
+			X:     r0Gx,
+			Y:     r0Gy,
 		},
-		EncM:encM0,
+		EncM: encM0,
 	}
 	c1 := CipherM{
 		RG: &ecdsa.PublicKey{
 			Curve: DefaultCurveType,
-			X: r1Gx,
-			Y: r1Gy,
+			X:     r1Gx,
+			Y:     r1Gy,
 		},
-		EncM:encM1,
+		EncM: encM1,
 	}
 
 	return []CipherM{c0, c1}, nil
