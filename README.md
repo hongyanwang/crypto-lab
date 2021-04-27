@@ -21,8 +21,10 @@ hash functions, include SHA2, SHA3, SM3, blake2b...
 ## 5. advanced
 advanced cryptosystems, include HE, MPC, ZKP...
 - hd: hierarchical deterministic encryption
-- he: fully homomorphic encryption
-- mpc: multi-party computation related algorithms
-- post: proof of space-time based on bilinear pairing
+- post: proof of space-time based on bi-linear pairing
 - ring_sign: ring signature based on RSA
 - linkable_ring_sign: linkable ring signature based on RSA
+- he: fully homomorphic encryption
+- ss: secret sharing
+- mpc: multi-party computation related algorithms
+  - ot: oblivious transfer based on RSA and ECC
