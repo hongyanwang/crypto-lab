@@ -66,7 +66,7 @@ func GenerateRandMap(truthGates []Gate) (EncGateMap, error) {
 }
 
 // generate random enc gate
-func GenerateEncTruth(truthGates []Gate, encGateMap EncGateMap) []Gate {
+func GenerateEncGates(truthGates []Gate, encGateMap EncGateMap) []Gate {
 	encGates := make([]Gate, len(truthGates))
 	for i := 0; i < len(truthGates); i++ {
 		x := truthGates[i].X
