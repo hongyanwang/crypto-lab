@@ -14,24 +14,30 @@ const KEYLEN = 32
 
 // one gate is (X,Y)->W
 type Gate struct {
-	X *big.Int
-	Y *big.Int
-	W *big.Int
+	X uint8
+	Y uint8
+	W uint8
+}
+
+type EncGate struct {
+	EncX []byte
+	EncY []byte
+	EncW []byte
 }
 
 // map truth input to enc
 type EncGateMap struct {
-	Xmap map[*big.Int]*big.Int // truth -> random int
-	Ymap map[*big.Int]*big.Int
-	Wmap map[*big.Int]*big.Int
+	Xmap map[uint8][]byte // truth -> random big int
+	Ymap map[uint8][]byte
+	Wmap map[uint8][]byte
 }
 
 // generate truth -> enc map
-func GenerateRandMap(truthGates []Gate) (EncGateMap, error) {
-	encGateMap := EncGateMap{
-		Xmap: make(map[*big.Int]*big.Int),
-		Ymap: make(map[*big.Int]*big.Int),
-		Wmap: make(map[*big.Int]*big.Int),
+func GenerateRandMap(truthGates []Gate) (*EncGateMap, error) {
+	encGateMap := &EncGateMap{
+		Xmap: make(map[uint8][]byte),
+		Ymap: make(map[uint8][]byte),
+		Wmap: make(map[uint8][]byte),
 	}
 	for i := 0; i < len(truthGates); i++ {
 		x := truthGates[i].X
@@ -40,7 +46,7 @@ func GenerateRandMap(truthGates []Gate) (EncGateMap, error) {
 			if err != nil {
 				return encGateMap, err
 			}
-			encGateMap.Xmap[x] = encX
+			encGateMap.Xmap[x] = sm3.SM3(encX.Bytes())
 		}
 		y := truthGates[i].Y
 		if _, ok := encGateMap.Ymap[y]; !ok {
@@ -48,17 +54,18 @@ func GenerateRandMap(truthGates []Gate) (EncGateMap, error) {
 			if err != nil {
 				return encGateMap, err
 			}
-			encGateMap.Ymap[y] = encY
+			encGateMap.Ymap[y] = sm3.SM3(encY.Bytes())
 		}
 		w := truthGates[i].W
 		if _, ok := encGateMap.Wmap[w]; !ok {
-			encW, err := rand.Int(rand.Reader, new(big.Int).Exp(big.NewInt(2), big.NewInt(224), nil))
+			encW, err := rand.Int(rand.Reader, new(big.Int).Exp(big.NewInt(2), big.NewInt(256), nil))
 			if err != nil {
 				return encGateMap, err
 			}
 			// to make encW verifiable, add tag to encW
-			encWbytes := append(encW.Bytes(), sm3.SM3(encW.Bytes())[:4]...)
-			encGateMap.Wmap[w] = new(big.Int).SetBytes(encWbytes)
+			hashW := sm3.SM3(encW.Bytes())[:28]
+			encWbytes := append(hashW, sm3.SM3(hashW)[:4]...)
+			encGateMap.Wmap[w] = encWbytes
 		}
 	}
 
@@ -66,16 +73,16 @@ func GenerateRandMap(truthGates []Gate) (EncGateMap, error) {
 }
 
 // generate random enc gate
-func GenerateEncGates(truthGates []Gate, encGateMap EncGateMap) []Gate {
-	encGates := make([]Gate, len(truthGates))
-	for i := 0; i < len(truthGates); i++ {
-		x := truthGates[i].X
-		y := truthGates[i].Y
-		w := truthGates[i].W
-		encGate := Gate{
-			X: encGateMap.Xmap[x],
-			Y: encGateMap.Ymap[y],
-			W: encGateMap.Wmap[w],
+func GenerateEncGates(truthGates []Gate, encGateMap *EncGateMap) []EncGate {
+	var encGates []EncGate
+	for _, gate := range truthGates {
+		x := gate.X
+		y := gate.Y
+		w := gate.W
+		encGate := EncGate{
+			EncX: encGateMap.Xmap[x],
+			EncY: encGateMap.Ymap[y],
+			EncW: encGateMap.Wmap[w],
 		}
 		encGates = append(encGates, encGate)
 	}
@@ -83,35 +90,35 @@ func GenerateEncGates(truthGates []Gate, encGateMap EncGateMap) []Gate {
 }
 
 // encrypt output of each gate using inputs
-func EncOutputs(encGates []Gate) ([]*big.Int, error) {
-	var encWs []*big.Int
+func EncOutputs(encGates []EncGate) ([][]byte, error) {
+	var encWs [][]byte
 	for _, gate := range encGates {
-		encYW, err := aes.Encrypt(gate.W.Bytes(), gate.Y.Bytes())
+		encYW, err := aes.Encrypt(gate.EncW, gate.EncY)
 		if err != nil {
 			return nil, err
 		}
-		encXYW, err := aes.Encrypt(encYW, gate.X.Bytes())
+		encXYW, err := aes.Encrypt(encYW, gate.EncX)
 		if err != nil {
 			return nil, err
 		}
-		encWs = append(encWs, new(big.Int).SetBytes(encXYW))
+		encWs = append(encWs, encXYW)
 	}
 	return encWs, nil
 }
 
 // bob decrypts encrypted outputs and get the valid one
-func DecOutput(encX, encY *big.Int, encWs []*big.Int) (*big.Int, error) {
-	for _, encW := range encWs {
-		encYW, err := aes.Decrypt(encW.Bytes(), encX.Bytes())
+func DecOutput(encX, encY []byte, encWs [][]byte) ([]byte, error) {
+	for i := 0; i < len(encWs); i++ {
+		cipher := encWs[i]
+
+		encYW, err := aes.Decrypt(cipher, encX)
 		if err != nil {
 			return nil, err
 		}
-		encW, err := aes.Decrypt(encYW, encY.Bytes())
-		if err != nil {
-			return nil, err
-		}
-		if verifyEncW(encW) {
-			return new(big.Int).SetBytes(encW), nil
+
+		encW, err := aes.Decrypt(encYW, encY)
+		if err != nil && verifyEncW(encW) {
+			return encW, nil
 		}
 	}
 	return nil, fmt.Errorf("did not find any valid encW")

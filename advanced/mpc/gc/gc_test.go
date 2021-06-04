@@ -1,7 +1,7 @@
 package gc
 
 import (
-	"math/big"
+	"reflect"
 	"testing"
 )
 
@@ -9,24 +9,24 @@ func TestGC(t *testing.T) {
 	// AND gate
 	// 1. create truth gates
 	gate0 := Gate{
-		X: big.NewInt(0),
-		Y: big.NewInt(0),
-		W: big.NewInt(0),
+		X: 0,
+		Y: 0,
+		W: 0,
 	}
 	gate1 := Gate{
-		X: big.NewInt(0),
-		Y: big.NewInt(1),
-		W: big.NewInt(0),
+		X: 0,
+		Y: 1,
+		W: 0,
 	}
 	gate2 := Gate{
-		X: big.NewInt(1),
-		Y: big.NewInt(0),
-		W: big.NewInt(0),
+		X: 1,
+		Y: 0,
+		W: 0,
 	}
 	gate3 := Gate{
-		X: big.NewInt(1),
-		Y: big.NewInt(1),
-		W: big.NewInt(1),
+		X: 1,
+		Y: 1,
+		W: 1,
 	}
 	truthGate := []Gate{gate0, gate1, gate2, gate3}
 
@@ -46,10 +46,10 @@ func TestGC(t *testing.T) {
 	}
 
 	// 5. get enc input0 = 0
-	encInput0 := encMap.Xmap[big.NewInt(0)]
+	encInput0 := encMap.Xmap[0]
 
 	// 6. suppose bob got enc input1 = enc(1) using ot scheme
-	encInput1 := encMap.Ymap[big.NewInt(1)]
+	encInput1 := encMap.Ymap[1]
 	encW, err := DecOutput(encInput0, encInput1, encWs)
 	if err != nil {
 		t.Error(err)
@@ -57,10 +57,41 @@ func TestGC(t *testing.T) {
 
 	// 7. recover result using map
 	for key, value := range encMap.Wmap {
-		if value == encW {
+		if reflect.DeepEqual(value, encW) {
 			t.Logf("result: %v\n", key)
 			return
 		}
 	}
 	t.Errorf("gc test failed")
 }
+
+/*
+func TestEncDec(t *testing.T) {
+	encX := sm3.SM3([]byte("encX"))
+	encY := sm3.SM3([]byte("encY"))
+	encW := sm3.SM3([]byte("encW"))
+
+	encYW, err := aes.Encrypt(encW, encY)
+	if err != nil {
+		panic(err)
+	}
+	cipher, err := aes.Encrypt(encYW, encX)
+	if err != nil {
+		panic(err)
+	}
+
+
+	decYW, err := aes.Decrypt(cipher, encX)
+	if err != nil {
+		panic(err)
+	}
+	decW, err := aes.Decrypt(decYW, encY)
+	if err != nil {
+		panic(err)
+	}
+
+	t.Log(encW)
+	t.Log(decW)
+}
+
+*/
