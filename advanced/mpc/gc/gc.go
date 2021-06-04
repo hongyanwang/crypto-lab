@@ -2,15 +2,19 @@ package gc
 
 import (
 	"crypto/rand"
+	"crypto/sha256"
 	"fmt"
-	"math/big"
+	"io"
 	"reflect"
 
-	"github.com/hongyanwang/crypto-lab/hash/sm3"
 	"github.com/hongyanwang/crypto-lab/symmetric/aes"
 )
 
-const KEYLEN = 32
+const (
+	ENCLEN   = 32
+	TAGLEN   = 4
+	BLOCKLEN = 16
+)
 
 // one gate is (X,Y)->W
 type Gate struct {
@@ -42,29 +46,32 @@ func GenerateRandMap(truthGates []Gate) (*EncGateMap, error) {
 	for i := 0; i < len(truthGates); i++ {
 		x := truthGates[i].X
 		if _, ok := encGateMap.Xmap[x]; !ok {
-			encX, err := rand.Int(rand.Reader, new(big.Int).Exp(big.NewInt(2), big.NewInt(256), nil))
-			if err != nil {
-				return encGateMap, err
+			encX := make([]byte, ENCLEN)
+			if _, err := io.ReadFull(rand.Reader, encX); err != nil {
+				return nil, err
 			}
-			encGateMap.Xmap[x] = sm3.SM3(encX.Bytes())
+			encGateMap.Xmap[x] = encX
 		}
 		y := truthGates[i].Y
 		if _, ok := encGateMap.Ymap[y]; !ok {
-			encY, err := rand.Int(rand.Reader, new(big.Int).Exp(big.NewInt(2), big.NewInt(256), nil))
-			if err != nil {
-				return encGateMap, err
+			encY := make([]byte, ENCLEN)
+			if _, err := io.ReadFull(rand.Reader, encY); err != nil {
+				return nil, err
 			}
-			encGateMap.Ymap[y] = sm3.SM3(encY.Bytes())
+			encGateMap.Ymap[y] = encY
 		}
 		w := truthGates[i].W
 		if _, ok := encGateMap.Wmap[w]; !ok {
-			encW, err := rand.Int(rand.Reader, new(big.Int).Exp(big.NewInt(2), big.NewInt(256), nil))
-			if err != nil {
-				return encGateMap, err
+			encW := make([]byte, ENCLEN-TAGLEN)
+			if _, err := io.ReadFull(rand.Reader, encW); err != nil {
+				return nil, err
+
 			}
 			// to make encW verifiable, add tag to encW
-			hashW := sm3.SM3(encW.Bytes())[:28]
-			encWbytes := append(hashW, sm3.SM3(hashW)[:4]...)
+			tag := sha256.Sum256(encW)
+			encWbytes := make([]byte, ENCLEN)
+			copy(encWbytes, encW)
+			copy(encWbytes[ENCLEN-TAGLEN:], tag[:TAGLEN])
 			encGateMap.Wmap[w] = encWbytes
 		}
 	}
@@ -92,32 +99,38 @@ func GenerateEncGates(truthGates []Gate, encGateMap *EncGateMap) []EncGate {
 // encrypt output of each gate using inputs
 func EncOutputs(encGates []EncGate) ([][]byte, error) {
 	var encWs [][]byte
+
 	for _, gate := range encGates {
 		encYW, err := aes.Encrypt(gate.EncW, gate.EncY)
 		if err != nil {
 			return nil, err
 		}
+
 		encXYW, err := aes.Encrypt(encYW, gate.EncX)
 		if err != nil {
 			return nil, err
 		}
+
 		encWs = append(encWs, encXYW)
 	}
 	return encWs, nil
 }
 
-// bob decrypts encrypted outputs and get the valid one
+// bob decrypts encrypted outputs and get the valid result
 func DecOutput(encX, encY []byte, encWs [][]byte) ([]byte, error) {
 	for i := 0; i < len(encWs); i++ {
 		cipher := encWs[i]
 
 		encYW, err := aes.Decrypt(cipher, encX)
 		if err != nil {
-			return nil, err
+			continue
 		}
-
+		if len(encYW)%BLOCKLEN != 0 {
+			// to avoid the panic(input not full blocks)
+			continue
+		}
 		encW, err := aes.Decrypt(encYW, encY)
-		if err != nil && verifyEncW(encW) {
+		if err == nil && verifyEncW(encW) {
 			return encW, nil
 		}
 	}
@@ -126,11 +139,16 @@ func DecOutput(encX, encY []byte, encWs [][]byte) ([]byte, error) {
 
 // verify if encW is valid
 func verifyEncW(encW []byte) bool {
-	len := len(encW)
-	msg := encW[:len-4]
-	tag := sm3.SM3(msg)
-	if !reflect.DeepEqual(tag[:4], encW[len-4:]) {
-		return false
+	length := len(encW)
+
+	msg := make([]byte, length-TAGLEN)
+	end := make([]byte, TAGLEN)
+	copy(msg, encW[:length-TAGLEN])
+	copy(end, encW[length-TAGLEN:])
+
+	tag := sha256.Sum256(msg)
+	if reflect.DeepEqual(tag[:TAGLEN], end) {
+		return true
 	}
-	return true
+	return false
 }

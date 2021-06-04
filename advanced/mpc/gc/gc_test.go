@@ -50,6 +50,7 @@ func TestGC(t *testing.T) {
 
 	// 6. suppose bob got enc input1 = enc(1) using ot scheme
 	encInput1 := encMap.Ymap[1]
+
 	encW, err := DecOutput(encInput0, encInput1, encWs)
 	if err != nil {
 		t.Error(err)
@@ -64,34 +65,3 @@ func TestGC(t *testing.T) {
 	}
 	t.Errorf("gc test failed")
 }
-
-/*
-func TestEncDec(t *testing.T) {
-	encX := sm3.SM3([]byte("encX"))
-	encY := sm3.SM3([]byte("encY"))
-	encW := sm3.SM3([]byte("encW"))
-
-	encYW, err := aes.Encrypt(encW, encY)
-	if err != nil {
-		panic(err)
-	}
-	cipher, err := aes.Encrypt(encYW, encX)
-	if err != nil {
-		panic(err)
-	}
-
-
-	decYW, err := aes.Decrypt(cipher, encX)
-	if err != nil {
-		panic(err)
-	}
-	decW, err := aes.Decrypt(decYW, encY)
-	if err != nil {
-		panic(err)
-	}
-
-	t.Log(encW)
-	t.Log(decW)
-}
-
-*/
