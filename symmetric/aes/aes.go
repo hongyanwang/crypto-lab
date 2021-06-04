@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
+	"fmt"
 )
 
 func Encrypt(msg, key []byte) ([]byte, error) {
@@ -34,7 +35,7 @@ func Decrypt(ciphertext, key []byte) ([]byte, error) {
 	blockMode := cipher.NewCBCDecrypter(block, key[:blockSize])
 	blockMode.CryptBlocks(plaintext, ciphertext)
 
-	return unpadding(plaintext), nil
+	return unpadding(plaintext)
 }
 
 func padding(src []byte, blocksize int) []byte {
@@ -43,8 +44,12 @@ func padding(src []byte, blocksize int) []byte {
 	return append(src, pad...)
 }
 
-func unpadding(src []byte) []byte {
+func unpadding(src []byte) ([]byte, error) {
 	n := len(src)
 	unpadnum := int(src[n-1])
-	return src[:n-unpadnum]
+
+	if n < unpadnum {
+		return nil, fmt.Errorf("invalid content")
+	}
+	return src[:n-unpadnum], nil
 }
