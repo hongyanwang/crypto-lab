@@ -36,7 +36,7 @@ type EncGateMap struct {
 	Wmap map[uint8][]byte
 }
 
-// generate truth -> enc map
+// GenerateRandMap generate truth -> enc map
 func GenerateRandMap(truthGates []Gate) (*EncGateMap, error) {
 	encGateMap := &EncGateMap{
 		Xmap: make(map[uint8][]byte),
@@ -79,7 +79,7 @@ func GenerateRandMap(truthGates []Gate) (*EncGateMap, error) {
 	return encGateMap, nil
 }
 
-// generate random enc gate
+// GenerateEncGates generate random enc gate using gate map
 func GenerateEncGates(truthGates []Gate, encGateMap *EncGateMap) []EncGate {
 	var encGates []EncGate
 	for _, gate := range truthGates {
@@ -96,7 +96,7 @@ func GenerateEncGates(truthGates []Gate, encGateMap *EncGateMap) []EncGate {
 	return encGates
 }
 
-// encrypt output of each gate using inputs
+// EncOutputs encrypt output of each gate using inputs
 func EncOutputs(encGates []EncGate) ([][]byte, error) {
 	var encWs [][]byte
 
@@ -116,7 +116,7 @@ func EncOutputs(encGates []EncGate) ([][]byte, error) {
 	return encWs, nil
 }
 
-// bob decrypts encrypted outputs and get the valid result
+// DecOutput decrypts encrypted outputs and get the valid result
 func DecOutput(encX, encY []byte, encWs [][]byte) ([]byte, error) {
 	for i := 0; i < len(encWs); i++ {
 		cipher := encWs[i]
@@ -137,7 +137,7 @@ func DecOutput(encX, encY []byte, encWs [][]byte) ([]byte, error) {
 	return nil, fmt.Errorf("did not find any valid encW")
 }
 
-// verify if encW is valid
+// verifyEncW verify if encW is valid
 func verifyEncW(encW []byte) bool {
 	length := len(encW)
 
