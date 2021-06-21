@@ -11,6 +11,7 @@ func TestSM3(t *testing.T) {
 }
 
 func BenchmarkSM3(b *testing.B) {
+	b.ReportAllocs()
 	msg := []byte("test")
 	for i := 0; i < b.N; i++ {
 		SM3(msg)
