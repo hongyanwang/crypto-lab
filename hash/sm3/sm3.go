@@ -14,7 +14,7 @@ func SM3(msg []byte) []byte {
 	n := len(msgPadding)
 	v := IV
 	for i := 0; i < n; i++ {
-		v = CF(v, msgPadding[i])
+		v = cf(v, msgPadding[i])
 	}
 
 	ret := make([]byte, 32)
@@ -24,15 +24,15 @@ func SM3(msg []byte) []byte {
 	return ret
 }
 
-// CF compression function
-func CF(v [8]uint32, b [16]uint32) [8]uint32 {
+// cf compression function
+func cf(v [8]uint32, b [16]uint32) [8]uint32 {
 	msgExt := msgExtend(b)
 	A, B, C, D, E, F, G, H := v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7]
 	for i := 0; i < 64; i++ {
-		ss1 := leftRotate(leftRotate(A, 12)+E+leftRotate(Ti(i), uint32(i)), 7)
+		ss1 := leftRotate(leftRotate(A, 12)+E+leftRotate(ti(i), uint32(i)), 7)
 		ss2 := ss1 ^ leftRotate(A, 12)
-		tt1 := FFj(A, B, C, i) + D + ss2 + msgExt[i+68]
-		tt2 := GGj(E, F, G, i) + H + ss1 + msgExt[i]
+		tt1 := ffj(A, B, C, i) + D + ss2 + msgExt[i+68]
+		tt2 := ggj(E, F, G, i) + H + ss1 + msgExt[i]
 		D = C
 		C = leftRotate(B, 9)
 		B = A
@@ -95,8 +95,8 @@ func padding(msg []byte) [][16]uint32 {
 	return ret
 }
 
-// Ti constant in compression function
-func Ti(i int) uint32 {
+// ti constant in compression function
+func ti(i int) uint32 {
 	// 0<=j<=15
 	if i < 16 {
 		return 0x79cc4519
@@ -105,16 +105,16 @@ func Ti(i int) uint32 {
 	return 0x7a879d8a
 }
 
-// FFj
-func FFj(x, y, z uint32, j int) uint32 {
+// ffj
+func ffj(x, y, z uint32, j int) uint32 {
 	if j < 16 {
 		return x ^ y ^ z
 	}
 	return (x & y) | (x & z) | (y & z)
 }
 
-// GGj
-func GGj(x, y, z uint32, j int) uint32 {
+// ggj
+func ggj(x, y, z uint32, j int) uint32 {
 	if j < 16 {
 		return x ^ y ^ z
 	}
