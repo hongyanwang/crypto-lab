@@ -9,13 +9,15 @@ symmetric cryptosystems, include DES, AES...
 - aes
 
 ## 3. asymmetric
-asymmetric cryptosystems, include RSA, Paillier, ECDSA, SM2, Schnnor, BLS...
+asymmetric cryptosystems
+- bls
+- ecies
 - paillier
 - rsa
 - sm2
 
 ## 4. hash
-hash functions, include SHA2, SHA3, SM3, blake2b...
+hash functions
 - sm3
 - Chameleon hash
 
@@ -27,7 +29,8 @@ advanced cryptosystems, include HE, MPC, ZKP...
 - he: fully homomorphic encryption
   - bfv
 - ss: secret sharing
+  - shamir: shamir's secret sharing
 - mpc: multi-party computation related algorithms
   - ot: oblivious transfer based on RSA and ECC
-  - gc: garbled circuit
+  - gc: yao's garbled circuit
   - psi: private set intersection
