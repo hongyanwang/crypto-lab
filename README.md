@@ -1,28 +1,21 @@
 # crypto-lab
 Golang implementation of cryptographic algorithms 
 
-## 1. traditional
-traditional cryptosystems
-
-## 2. symmetric
-symmetric cryptosystems, include DES, AES...
+## 1. symmetric
 - aes
 
-## 3. asymmetric
-asymmetric cryptosystems
+## 2. asymmetric
 - bls
 - ecies
 - paillier
 - rsa
 - sm2
 
-## 4. hash
-hash functions
+## 3. hash
 - sm3
 - Chameleon hash
 
-## 5. advanced
-advanced cryptosystems, include HE, MPC, ZKP...
+## 4. advanced
 - hd: hierarchical deterministic encryption
 - ring_sign: ring signature based on RSA
 - linkable_ring_sign: linkable ring signature based on RSA
