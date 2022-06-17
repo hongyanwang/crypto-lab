@@ -9,7 +9,7 @@ import (
 var one = big.NewInt(1)
 var zero = big.NewInt(0)
 
-// PrivateKey represents a RSAA private key
+// PrivateKey represents a RSA private key
 type PrivateKey struct {
 	PublicKey
 	P   *big.Int // P and Q are primes with same length
@@ -18,7 +18,7 @@ type PrivateKey struct {
 	D   *big.Int // D = e^-1 (mod phi)
 }
 
-// PublicKey represents a Paillier public key
+// PublicKey represents a RSA public key
 type PublicKey struct {
 	N *big.Int // N=P*Q
 	E *big.Int // 0 < E < phi，&& e and phi are coprime

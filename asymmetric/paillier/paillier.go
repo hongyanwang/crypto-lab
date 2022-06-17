@@ -14,25 +14,25 @@ var zero = big.NewInt(0)
 // PrivateKey represents a Paillier private key
 type PrivateKey struct {
 	PublicKey
-	P			*big.Int	// P is prime
-	Q			*big.Int	// Q is prime, P and Q have same length
-	PP			*big.Int    // P^2
-	QQ			*big.Int 	// Q^2
-	PinvQ		*big.Int	// P^{-1} mod Q
-	Lambda		*big.Int	// Lambda=(P-1)(Q-1)
-	Mu			*big.Int	// Mu=Lambda^-1 (mod N)
+	P      *big.Int // P is prime
+	Q      *big.Int // Q is prime, P and Q have same length
+	PP     *big.Int // P^2
+	QQ     *big.Int // Q^2
+	PinvQ  *big.Int // P^{-1} mod Q
+	Lambda *big.Int // Lambda=(P-1)(Q-1)
+	Mu     *big.Int // Mu=Lambda^-1 (mod N)
 }
 
 // PublicKey represents a Paillier public key
 type PublicKey struct {
-	N        *big.Int	// N=P*Q
-	G        *big.Int	// G=N+1
-	NN		 *big.Int	// NN=N*N
+	N  *big.Int // N=P*Q
+	G  *big.Int // G=N+1
+	NN *big.Int // NN=N*N
 }
 
 // GenerateKey generates a paillier private key
 func GenerateKey(secbit int) (*PrivateKey, error) {
-	keylen := secbit/2
+	keylen := secbit / 2
 	p, err := rand.Prime(rand.Reader, keylen)
 	if err != nil {
 		return nil, err
@@ -51,17 +51,17 @@ func GenerateKey(secbit int) (*PrivateKey, error) {
 	g := new(big.Int).Add(n, one)
 	return &PrivateKey{
 		PublicKey: PublicKey{
-			N:        n,
-			G:        g,
-			NN:       nn,
+			N:  n,
+			G:  g,
+			NN: nn,
 		},
-		P: p,
-		Q: q,
-		PP: pp,
-		QQ: qq,
-		PinvQ: pinvq,
+		P:      p,
+		Q:      q,
+		PP:     pp,
+		QQ:     qq,
+		PinvQ:  pinvq,
 		Lambda: lambda,
-		Mu: mu,
+		Mu:     mu,
 	}, nil
 }
 
@@ -76,7 +76,7 @@ func PaillierEncrypt(m *big.Int, pubkey *PublicKey) (*big.Int, error) {
 	}
 	gm := new(big.Int).Exp(pubkey.G, m, pubkey.NN)
 	rn := new(big.Int).Exp(r, pubkey.N, pubkey.NN)
-	return new(big.Int).Mod(new(big.Int).Mul(gm, rn),pubkey.NN), nil
+	return new(big.Int).Mod(new(big.Int).Mul(gm, rn), pubkey.NN), nil
 }
 
 //m=L(c^Lambda mod N^2)*Mu (mod N)
@@ -133,7 +133,7 @@ func CRT(a1, a2 *big.Int, prvkey *PrivateKey) *big.Int {
 
 // PaillierMul
 func PaillierMul(cipher1, cipher2 *big.Int, pubkey *PublicKey) *big.Int {
-	return new(big.Int).Mod(new(big.Int).Mul(cipher1,cipher2), pubkey.NN)
+	return new(big.Int).Mod(new(big.Int).Mul(cipher1, cipher2), pubkey.NN)
 }
 
 // PaillierExp
@@ -147,31 +147,31 @@ func PrivateToString(key *PrivateKey) string {
 }
 
 // PrivateFromString import private key from string
-func PrivateFromString(data string) (*PrivateKey) {
+func PrivateFromString(data string) *PrivateKey {
 	prvkey := strings.Split(data, ",")
-	p,_ := new(big.Int).SetString(prvkey[0], 10)
-	q,_ := new(big.Int).SetString(prvkey[1], 10)
+	p, _ := new(big.Int).SetString(prvkey[0], 10)
+	q, _ := new(big.Int).SetString(prvkey[1], 10)
 	pp := new(big.Int).Mul(p, p)
 	qq := new(big.Int).Mul(q, q)
 	pinvq := new(big.Int).ModInverse(p, q)
-	n := new(big.Int).Mul(p,q)
-	nn := new(big.Int).Mul(n,n)
+	n := new(big.Int).Mul(p, q)
+	nn := new(big.Int).Mul(n, n)
 	lambda := new(big.Int).Mul(new(big.Int).Sub(p, one), new(big.Int).Sub(q, one))
 	mu := new(big.Int).ModInverse(lambda, n)
 	g := new(big.Int).Add(n, one)
 	return &PrivateKey{
 		PublicKey: PublicKey{
-			N:        n,
-			G:        g,
-			NN:       nn,
+			N:  n,
+			G:  g,
+			NN: nn,
 		},
-		P: p,
-		Q: q,
-		PP: pp,
-		QQ: qq,
-		PinvQ: pinvq,
+		P:      p,
+		Q:      q,
+		PP:     pp,
+		QQ:     qq,
+		PinvQ:  pinvq,
 		Lambda: lambda,
-		Mu: mu,
+		Mu:     mu,
 	}
 }
 
@@ -181,8 +181,8 @@ func PublicToString(key *PublicKey) string {
 }
 
 // PublicFromString import public key from string
-func PublicFromString(data string) (*PublicKey) {
-	n,_ := new(big.Int).SetString(data, 10)
+func PublicFromString(data string) *PublicKey {
+	n, _ := new(big.Int).SetString(data, 10)
 	g := new(big.Int).Add(n, one)
 	nn := new(big.Int).Mul(n, n)
 	return &PublicKey{

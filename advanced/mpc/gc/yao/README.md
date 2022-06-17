@@ -1,5 +1,5 @@
-# Garbled Circuit
-Go implementation of Garbled Circuit
+# Yao's Garbled Circuit
+Go implementation of Yao's Garbled Circuit(binary computation with two parities).
 
 Support:
 - one gate operation
