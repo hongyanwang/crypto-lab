@@ -1,28 +1,32 @@
 # crypto-lab
 Golang implementation of cryptographic algorithms 
 
-## 1. symmetric
+## 1. common
+- matrix: matrix operation mod P
+
+## 2. symmetric
 - aes
 
-## 2. asymmetric
+## 3. asymmetric
 - bls
 - ecies
 - paillier
 - rsa
 - sm2
 
-## 3. hash
+## 4. hash
 - sm3
 - Chameleon hash
 
-## 4. advanced
+## 5. advanced
 - hd: hierarchical deterministic encryption
 - ring_sign: ring signature based on RSA
 - linkable_ring_sign: linkable ring signature based on RSA
 - he: fully homomorphic encryption
   - bfv
 - ss: secret sharing
-  - shamir: shamir's secret sharing
+  - shamir: Shamir's secret sharing
+  - blakley: Blakley's secret sharing
 - mpc: multi-party computation related algorithms
   - ot: oblivious transfer based on RSA and ECC
   - gc: yao's garbled circuit
