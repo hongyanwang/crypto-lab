@@ -1,4 +1,4 @@
-package gc
+package yao
 
 import (
 	"crypto/rand"
@@ -16,7 +16,7 @@ const (
 	BLOCKLEN = 16
 )
 
-// one gate is (X,Y)->W
+// one gate is (X,Yg)->W
 type Gate struct {
 	X uint8
 	Y uint8
