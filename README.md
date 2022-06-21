@@ -3,6 +3,7 @@ Golang implementation of cryptographic algorithms
 
 ## 1. common
 - matrix: matrix operation mod P
+- crt: chinese remainder theorem
 
 ## 2. symmetric
 - aes
@@ -27,7 +28,8 @@ Golang implementation of cryptographic algorithms
 - ss: secret sharing
   - shamir: Shamir's secret sharing
   - blakley: Blakley's secret sharing
+  - crt: secret sharing using CRT
 - mpc: multi-party computation related algorithms
   - ot: oblivious transfer based on RSA and ECC
   - gc: yao's garbled circuit
-  - psi: private set intersection
+  - psi: private set intersection using DH OPRF
