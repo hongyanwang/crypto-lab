@@ -20,16 +20,16 @@ Golang implementation of cryptographic algorithms
 - Chameleon hash
 
 ## 5. advanced
+- gc: garbled circuit
+  - yao: Yao's garbled circuit
 - hd: hierarchical deterministic encryption
-- ring_sign: ring signature based on RSA
-- linkable_ring_sign: linkable ring signature based on RSA
 - he: fully homomorphic encryption
   - bfv
+- ring_sign: ring signature based on RSA
+- linkable_ring_sign: linkable ring signature based on RSA
+- ot: oblivious transfer based on RSA and ECC
+- psi: private set intersection using DH OPRF
 - ss: secret sharing
   - shamir: Shamir's secret sharing
   - blakley: Blakley's secret sharing
   - crt: secret sharing using CRT
-- mpc: multi-party computation related algorithms
-  - ot: oblivious transfer based on RSA and ECC
-  - gc: yao's garbled circuit
-  - psi: private set intersection using DH OPRF
