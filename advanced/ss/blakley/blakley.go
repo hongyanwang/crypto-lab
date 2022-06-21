@@ -25,7 +25,7 @@ func GenerateShares(partyNum, threshold int, secret *big.Int) ([][]*big.Int, err
 		return nil, fmt.Errorf("threshold is too small, at least: %d", MinThreshold)
 	}
 
-	// 1. generate random coordinate to form a point (s=x0, x1, x2... x_{k-2}, y)
+	// 1. generate random coordinate to form a point (s=x0, x1, x2... x_{t-2}, y)
 	coordinates := make([]*big.Int, 0, threshold)
 	coordinates = append(coordinates, new(big.Int).Set(secret))
 	for i := 1; i < threshold; i++ {
@@ -36,9 +36,9 @@ func GenerateShares(partyNum, threshold int, secret *big.Int) ([][]*big.Int, err
 		coordinates = append(coordinates, r)
 	}
 
-	// 2. for each party, generate random {a_0, a_1, ... a_{k-2}}
-	//  and calculate c=y-(a_0*x_0+...a_{k-2}*x_{k-2})
-	// each share is {a_0, a_1... a_{k-2}, c}
+	// 2. for each party, generate random {a_0, a_1, ... a_{t-2}}
+	//  and calculate c=y-(a_0*x_0+...a_{t-2}*x_{t-2})
+	// each share is {a_0, a_1... a_{t-2}, c}
 	shares := make([][]*big.Int, 0, partyNum)
 	for i := 0; i < partyNum; i++ {
 		share := make([]*big.Int, 0, threshold)
@@ -64,10 +64,10 @@ func GenerateShares(partyNum, threshold int, secret *big.Int) ([][]*big.Int, err
 
 // RecoverSecret recover secret value using shares, number of shares must be equal to threshold
 /*
-	a_0,0	a_0,1	...	a_0,k-2, -1			x_0		 -c_0
-	a_1,0	a_1,1	...	a_1,k-2, -1			x_1		 -c_1
-			......						*		  =
-	a_k-1,0	a_k-1,1	...	a_k-1,k-2, -1		y		 -c_k-1
+	a_0,0	a_0,1	...	a_0,t-2		-1		x_0		 -c_0
+	a_1,0	a_1,1	...	a_1,t-2		-1		x_1		 -c_1
+			......						*		 =
+	a_t-1,0	a_t-1,1	...	a_t-1,t-2	-1		y		 -c_t-1
 */
 func RecoverSecret(shares [][]*big.Int) (*big.Int, error) {
 	// set the matrix
