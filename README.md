@@ -4,6 +4,7 @@ Golang implementation of cryptographic algorithms
 ## 1. common
 - matrix: matrix operation mod P
 - crt: chinese remainder theorem
+- polynomial: polynomial operations, including Lagrange interpolation
 
 ## 2. symmetric
 - aes
