@@ -29,6 +29,7 @@ Golang implementation of cryptographic algorithms
 - ring_sign: ring signature based on RSA
 - linkable_ring_sign: linkable ring signature based on RSA
 - ot: oblivious transfer based on RSA and ECC
+- pir: private information retrieval using homomorphic encryption and Lagrange interpolation
 - psi: private set intersection using DH OPRF
 - ss: secret sharing
   - shamir: Shamir's secret sharing
