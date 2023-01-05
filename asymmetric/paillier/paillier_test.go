@@ -49,17 +49,17 @@ func testKeyGen() {
 	prvkey, _ = GenerateKey(secbit)
 }
 func testEnc() {
-	ciphertext1, _ = PaillierEncrypt(plaintext1, &prvkey.PublicKey)
-	ciphertext2, _ = PaillierEncrypt(plaintext2, &prvkey.PublicKey)
+	ciphertext1, _ = Encrypt(plaintext1, &prvkey.PublicKey)
+	ciphertext2, _ = Encrypt(plaintext2, &prvkey.PublicKey)
 }
 func testDec() {
-	PaillierDecrypt(ciphertext1, prvkey)
+	Decrypt(ciphertext1, prvkey)
 }
 func testAdd() {
-	PaillierMul(ciphertext1, ciphertext2, &prvkey.PublicKey)
+	Add(ciphertext1, ciphertext2, &prvkey.PublicKey)
 }
 func testMul() {
-	PaillierExp(ciphertext1, scalar, &prvkey.PublicKey)
+	ScalarMul(ciphertext1, scalar, &prvkey.PublicKey)
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -74,26 +74,26 @@ func TestKeyGen(t *testing.T) {
 }
 
 func TestEnc(t *testing.T) {
-	ciphertext1, _ = PaillierEncrypt(plaintext1, &prvkey.PublicKey)
-	ciphertext2, _ = PaillierEncrypt(plaintext2, &prvkey.PublicKey)
+	ciphertext1, _ = Encrypt(plaintext1, &prvkey.PublicKey)
+	ciphertext2, _ = Encrypt(plaintext2, &prvkey.PublicKey)
 }
 
 func TestDec(t *testing.T) {
-	plain1, _ := PaillierDecryptOrig(ciphertext1, prvkey)
-	plain2, _ := PaillierDecrypt(ciphertext2, prvkey)
+	plain1, _ := DecryptOrig(ciphertext1, prvkey)
+	plain2, _ := Decrypt(ciphertext2, prvkey)
 	fmt.Println(plain1)
 	fmt.Println(plain2)
 	fmt.Println("")
 }
 
 func TestAdd(t *testing.T) {
-	ciphertextAdd = PaillierMul(ciphertext1, ciphertext2, &prvkey.PublicKey)
-	plainAdd, _ := PaillierDecrypt(ciphertextAdd, prvkey)
+	ciphertextAdd = Add(ciphertext1, ciphertext2, &prvkey.PublicKey)
+	plainAdd, _ := Decrypt(ciphertextAdd, prvkey)
 	fmt.Println(plainAdd)
 }
 
 func TestMul(t *testing.T) {
-	ciphertextMul = PaillierExp(ciphertext1, scalar, &prvkey.PublicKey)
-	plainMul, _ := PaillierDecrypt(ciphertextMul, prvkey)
+	ciphertextMul = ScalarMul(ciphertext1, scalar, &prvkey.PublicKey)
+	plainMul, _ := Decrypt(ciphertextMul, prvkey)
 	fmt.Println(plainMul)
 }

@@ -65,8 +65,9 @@ func GenerateKey(secbit int) (*PrivateKey, error) {
 	}, nil
 }
 
+// Encrypt encrypt message using public key
 // c=G^m*r^N (mod N^2)
-func PaillierEncrypt(m *big.Int, pubkey *PublicKey) (*big.Int, error) {
+func Encrypt(m *big.Int, pubkey *PublicKey) (*big.Int, error) {
 	r, err := rand.Int(rand.Reader, pubkey.N)
 	if err != nil {
 		return nil, err
@@ -79,8 +80,9 @@ func PaillierEncrypt(m *big.Int, pubkey *PublicKey) (*big.Int, error) {
 	return new(big.Int).Mod(new(big.Int).Mul(gm, rn), pubkey.NN), nil
 }
 
-//m=L(c^Lambda mod N^2)*Mu (mod N)
-func PaillierDecryptOrig(c *big.Int, prvkey *PrivateKey) (*big.Int, error) {
+// DecryptOrig decrypt message using private key
+// m=L(c^Lambda mod N^2)*Mu (mod N)
+func DecryptOrig(c *big.Int, prvkey *PrivateKey) (*big.Int, error) {
 	nn := prvkey.PublicKey.NN
 	if c.Cmp(nn) >= 0 {
 		return nil, errors.New("ciphertext must be smaller than n square")
@@ -92,8 +94,9 @@ func PaillierDecryptOrig(c *big.Int, prvkey *PrivateKey) (*big.Int, error) {
 	return new(big.Int).Mod(lmu, prvkey.N), nil
 }
 
-// optimization using CRT [Paillier99, section 7](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.112.4035&rep=rep1&type=pdf)
-func PaillierDecrypt(c *big.Int, prvkey *PrivateKey) (*big.Int, error) {
+// Decrypt optimization of decryption using CRT
+// reference: [Paillier99, section 7](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.112.4035&rep=rep1&type=pdf)
+func Decrypt(c *big.Int, prvkey *PrivateKey) (*big.Int, error) {
 	if c.Cmp(prvkey.NN) >= 0 {
 		return nil, errors.New("ciphertext must be smaller than n square")
 	}
@@ -131,13 +134,15 @@ func CRT(a1, a2 *big.Int, prvkey *PrivateKey) *big.Int {
 	return new(big.Int).Mod(new(big.Int).Add(a1, difPP), prvkey.N)
 }
 
-// PaillierMul
-func PaillierMul(cipher1, cipher2 *big.Int, pubkey *PublicKey) *big.Int {
+// Add multiply two ciphertext to get encryption of the addition of two numbers
+// enc(c1) * enc(c2) = enc(c1+c2)
+func Add(cipher1, cipher2 *big.Int, pubkey *PublicKey) *big.Int {
 	return new(big.Int).Mod(new(big.Int).Mul(cipher1, cipher2), pubkey.NN)
 }
 
-// PaillierExp
-func PaillierExp(cipher, scalar *big.Int, pubkey *PublicKey) *big.Int {
+// ScalarMul exponent of ciphertext is encryption of the scalar multiplication of a number
+// enc(s*c) = enc(c)^s
+func ScalarMul(cipher, scalar *big.Int, pubkey *PublicKey) *big.Int {
 	return new(big.Int).Exp(cipher, scalar, pubkey.NN)
 }
 

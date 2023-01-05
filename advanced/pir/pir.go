@@ -51,7 +51,7 @@ func GenSearchMaterial(targetIdx *big.Int, pubkey *paillier.PublicKey, totalItem
 	target := new(big.Int).Set(targetIdx)
 	var i int64 = 0
 	for i < totalItems {
-		enc, err := paillier.PaillierEncrypt(target, pubkey)
+		enc, err := paillier.Encrypt(target, pubkey)
 		if err != nil {
 			return nil, err
 		}
@@ -77,22 +77,22 @@ func GenEncGxFx(encVectors, coefGx, coefFx []*big.Int, pubkey *paillier.PublicKe
 		return nil, nil, fmt.Errorf("length of encVectors[%d] are not equal to length of coefFx[%d]-1", len(encVectors), len(coefFx))
 	}
 
-	encGx, err := paillier.PaillierEncrypt(coefGx[0], pubkey)
+	encGx, err := paillier.Encrypt(coefGx[0], pubkey)
 	if err != nil {
-		return nil, nil, fmt.Errorf("PaillierEncrypt failed: %v", err)
+		return nil, nil, fmt.Errorf("Paillier Encrypt failed: %v", err)
 	}
 	for i := 0; i < len(encVectors)-1; i++ {
-		mul := paillier.PaillierExp(encVectors[i], coefGx[i+1], pubkey)
-		encGx = paillier.PaillierMul(encGx, mul, pubkey)
+		mul := paillier.ScalarMul(encVectors[i], coefGx[i+1], pubkey)
+		encGx = paillier.Add(encGx, mul, pubkey)
 	}
 
-	encFx, err := paillier.PaillierEncrypt(coefFx[0], pubkey)
+	encFx, err := paillier.Encrypt(coefFx[0], pubkey)
 	if err != nil {
-		return nil, nil, fmt.Errorf("PaillierEncrypt failed: %v", err)
+		return nil, nil, fmt.Errorf("Paillier Encrypt failed: %v", err)
 	}
 	for i := 0; i < len(encVectors); i++ {
-		mul := paillier.PaillierExp(encVectors[i], coefFx[i+1], pubkey)
-		encFx = paillier.PaillierMul(encFx, mul, pubkey)
+		mul := paillier.ScalarMul(encVectors[i], coefFx[i+1], pubkey)
+		encFx = paillier.Add(encFx, mul, pubkey)
 	}
 	return encGx, encFx, nil
 }
@@ -100,12 +100,12 @@ func GenEncGxFx(encVectors, coefGx, coefFx []*big.Int, pubkey *paillier.PublicKe
 // RetrieveTargetValue retrieve target value by homomorhpic decryption
 // if F(x)=0, G(x) is the target value, otherwise target is not found
 func RetrieveTargetValue(encGx, encFx *big.Int, privkey *paillier.PrivateKey) (*big.Int, error) {
-	fx, err := paillier.PaillierDecrypt(encFx, privkey)
+	fx, err := paillier.Decrypt(encFx, privkey)
 	if err != nil {
 		return nil, err
 	}
 	if fx.Cmp(big.NewInt(0)) == 0 {
-		gx, err := paillier.PaillierDecrypt(encGx, privkey)
+		gx, err := paillier.Decrypt(encGx, privkey)
 		if err != nil {
 			return nil, err
 		}
