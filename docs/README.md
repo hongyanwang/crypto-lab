@@ -2,9 +2,7 @@
 
 Introduction of multiple crypto protocols.
 
->https://hongyanwang.github.io/crypto-lab/
-
-# Personal website
+### Personal Websites
 
 > [GitHub](https://github.com/hongyanwang)
 
