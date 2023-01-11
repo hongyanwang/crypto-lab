@@ -1,3 +1,7 @@
+[DOC](https://hongyanwang.github.io/crypto-lab/)
+
+[![License](https://img.shields.io/badge/license-Apache%202-blue.svg)](LICENSE)
+
 # crypto-lab
 Golang implementation of cryptographic algorithms 
 
