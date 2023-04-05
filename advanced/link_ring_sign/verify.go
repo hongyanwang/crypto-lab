@@ -18,12 +18,22 @@ func verify(sig, msg []byte) (bool, error) {
 		return false, err
 	}
 
-	key := sha256.Sum256(append(msg, ringSign.LinkKey...))
-	c, err := cky(ringSign.PublicKeys, ringSign.Xs, key[:], ringSign.V)
-	if err != nil {
-		return false, fmt.Errorf("failed to compute cky, err: %v", err)
+	// compute E1
+	e := ringSign.E1
+	minN := minN(ringSign.PublicKeys)
+	// E_{i+1} = hash(s*hash(P_i)+E_i*linkKey+m)
+	for i := 0; i < len(ringSign.PublicKeys); i++ {
+		hashPi := sha256.Sum256(ringSign.PublicKeys[i].E.Bytes())
+		sHashPi := new(big.Int).Mul(ringSign.Ss[i], new(big.Int).SetBytes(hashPi[:]))
+		eiLink := new(big.Int).Mul(e, ringSign.LinkKey)
+		add := new(big.Int).Add(sHashPi, eiLink)
+		add = add.Add(add, new(big.Int).SetBytes(msg))
+		add = add.Mod(add, minN)
+		eb := sha256.Sum256(add.Bytes())
+		e = new(big.Int).SetBytes(eb[:])
 	}
-	if new(big.Int).SetBytes(c).Cmp(ringSign.V) != 0 {
+
+	if ringSign.E1.Cmp(e) != 0 {
 		return false, nil
 	}
 	return true, nil
@@ -31,11 +41,11 @@ func verify(sig, msg []byte) (bool, error) {
 
 // checkSignature check if signature is valid
 func checkSignature(sig LinkRingSignature) error {
-	if sig.V == nil {
-		return fmt.Errorf("invalid signature, nil v")
+	if sig.E1 == nil {
+		return fmt.Errorf("invalid signature, nil E1")
 	}
-	if sig.Xs == nil {
-		return fmt.Errorf("invalid signature, nil xs")
+	if sig.Ss == nil {
+		return fmt.Errorf("invalid signature, nil Ss")
 	}
 	if sig.PublicKeys == nil {
 		return fmt.Errorf("invalid signature, nil public keys")
@@ -43,8 +53,8 @@ func checkSignature(sig LinkRingSignature) error {
 	if sig.LinkKey == nil {
 		return fmt.Errorf("invalid signature, nil link key")
 	}
-	if len(sig.Xs) != len(sig.PublicKeys) {
-		return fmt.Errorf("invalid signature, public keys and xs should have same length")
+	if len(sig.Ss) != len(sig.PublicKeys) {
+		return fmt.Errorf("invalid signature, public keys and Ss should have same length")
 	}
 	return nil
 }

@@ -27,11 +27,21 @@ func TestRingSignature(t *testing.T) {
 		t.Error(err)
 	}
 
+	// right message
 	v, err := verify(signature, msg)
 	if err != nil {
 		t.Error(err)
 	}
 	if !v {
 		t.Errorf("link ring signature test failed")
+	}
+
+	// wrong message
+	v, err = verify(signature, []byte("wrong ring signature msg"))
+	if err != nil {
+		t.Error(err)
+	}
+	if v {
+		t.Errorf("link ring signature supposed to be failed")
 	}
 }

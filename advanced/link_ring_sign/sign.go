@@ -21,9 +21,9 @@ var (
 // LinkRingSignature include 2n+2 members
 type LinkRingSignature struct {
 	PublicKeys []*rsa.PublicKey // all members' public keys
-	V          *big.Int         // initial random number
-	Xs         []*big.Int       // random numbers
-	LinkKey    []byte           // link key
+	E1         *big.Int         // initial random number
+	Ss         []*big.Int       // random numbers
+	LinkKey    *big.Int         // link key
 }
 
 // Sign
@@ -32,7 +32,7 @@ func Sign(partnerPubkeys []*rsa.PublicKey, privkey *rsa.PrivateKey, msg []byte) 
 		return nil, fmt.Errorf("wrong partners number, supposed to be %d", minimumPartners)
 	}
 
-	// 1. generate a random index and insert signer's public key to index
+	// 1. generate a random index and insert signer's public key to index r
 	max := new(big.Int).SetInt64(int64(len(partnerPubkeys) + 1))
 	index, err := rand.Int(rand.Reader, max)
 	if err != nil {
@@ -42,56 +42,70 @@ func Sign(partnerPubkeys []*rsa.PublicKey, privkey *rsa.PrivateKey, msg []byte) 
 	copy(allPubkeys, partnerPubkeys[:int(index.Int64())])
 	allPubkeys[int(index.Int64())] = &privkey.PublicKey
 	copy(allPubkeys[int(index.Int64())+1:], partnerPubkeys[int(index.Int64()):])
+	// get minimum N among all public keys
+	minN := minN(allPubkeys)
 
 	// 2. compute link key using private key
-	linkKey := getLinkKey(privkey)
+	linkKey := getLinkKey(privkey, minN)
 
-	// 3. key = hash(m|linkKey) is the encryption key
-	key := sha256.Sum256(append(msg, linkKey...))
-
-	// 3. get initial number v
-	initialV, err := rand.Int(rand.Reader, minN(allPubkeys))
+	// 3. get E_{r+1} = hash(k*hash(P_r)+m) using random k
+	k, err := rand.Int(rand.Reader, minN)
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate initial v, err: %v", err)
+		return nil, fmt.Errorf("failed to generate random k, err: %v", err)
 	}
+	hashPr := sha256.Sum256(privkey.E.Bytes())
+	kHashPr := new(big.Int).Mul(k, new(big.Int).SetBytes(hashPr[:]))
+	kHashPr = kHashPr.Add(kHashPr, new(big.Int).SetBytes(msg))
+	kHashPr = kHashPr.Mod(kHashPr, minN)
+	er1Bytes := sha256.Sum256(kHashPr.Bytes())
+	er1 := new(big.Int).SetBytes(er1Bytes[:])
+	er1 = er1.Mod(er1, minN)
 
-	xs := make([]*big.Int, len(allPubkeys))
-	yr := big.NewInt(0)
+	ss := make([]*big.Int, len(allPubkeys))
+	es := make([]*big.Int, len(allPubkeys))
+	es[int(index.Int64()+1)%len(allPubkeys)] = er1
+
+	// 4. get all Es and Ss
+	// E_{i+1} = hash(s*hash(P_i)+E_i*linkKey+m)
+	//for i:=index.Int64()+1; i<index.Int64(); i++{
+	idx := index.Int64() + 1
 	for {
-		// 4. get random number list Xs
-		for i := 0; i < len(xs); i++ {
-			if i == int(index.Int64()) {
-				continue
-			}
-			xs[i], err = rand.Int(rand.Reader, allPubkeys[i].N)
-			if err != nil {
-				return nil, fmt.Errorf("failed to generate random number list xs, err: %v", err)
-			}
-		}
-
-		// 5. compute encryption loop to get y_r
-		yr, err = getYr(allPubkeys, xs, int(index.Int64()), key[:], initialV)
-		if err != nil {
-			return nil, fmt.Errorf("failed to calculate yr, err: %v", err)
-		}
-		// yr has to be smaller than N
-		if yr.Cmp(privkey.N) == -1 {
+		i := int(idx) % len(allPubkeys)
+		if i == int(index.Int64()) {
 			break
 		}
+
+		// get random number s
+		s, err := rand.Int(rand.Reader, minN)
+		if err != nil {
+			return nil, fmt.Errorf("failed to generate random k, err: %v", err)
+		}
+		ss[i] = s
+
+		hashPi := sha256.Sum256(allPubkeys[i].E.Bytes())
+		sHashPi := new(big.Int).Mul(s, new(big.Int).SetBytes(hashPi[:]))
+		eiLink := new(big.Int).Mul(es[i], linkKey)
+		add := new(big.Int).Add(sHashPi, eiLink)
+		add = add.Add(add, new(big.Int).SetBytes(msg))
+		add = add.Mod(add, minN)
+		e := sha256.Sum256(add.Bytes())
+		es[(i+1)%len(allPubkeys)] = new(big.Int).SetBytes(e[:])
+
+		idx++
 	}
 
-	// 6. find x_r for signer
-	xr, err := asymmetricDecrypt(yr.Bytes(), privkey)
-	if err != nil {
-		return nil, fmt.Errorf("failed to calculate xr, err: %v", err)
-	}
-	xs[index.Int64()] = new(big.Int).SetBytes(xr)
+	// 5. find S_r=k-E_r*hash(s_r)
+	hashsr := sha256.Sum256(privkey.D.Bytes())
+	erHashsr := new(big.Int).Mul(es[index.Int64()], new(big.Int).SetBytes(hashsr[:]))
+	Sr := new(big.Int).Sub(k, erHashsr)
+	Sr = Sr.Mod(Sr, minN)
+	ss[index.Int64()] = Sr
 
-	// 7. construct signature
+	// 6. construct signature
 	signature := LinkRingSignature{
 		PublicKeys: allPubkeys,
-		V:          initialV,
-		Xs:         xs,
+		E1:         es[0],
+		Ss:         ss,
 		LinkKey:    linkKey,
 	}
 	ret, err := json.Marshal(signature)
@@ -101,74 +115,16 @@ func Sign(partnerPubkeys []*rsa.PublicKey, privkey *rsa.PrivateKey, msg []byte) 
 	return ret, nil
 }
 
-// getLinkKey get link key based on private key, linkKey = hash(d|e|N)
-func getLinkKey(privkey *rsa.PrivateKey) []byte {
-	msg := privkey.D.Bytes()
-	msg = append(msg, privkey.E.Bytes()...)
-	msg = append(msg, privkey.N.Bytes()...)
-	linkKey := sha256.Sum256(msg)
-	return linkKey[:]
+// getLinkKey get link key based on private key, linkKey = hash(e)*hash(d) mod N
+func getLinkKey(privkey *rsa.PrivateKey, minN *big.Int) *big.Int {
+	hashE := sha256.Sum256(privkey.E.Bytes())
+	hashD := sha256.Sum256(privkey.D.Bytes())
+	linkKey := new(big.Int).Mul(new(big.Int).SetBytes(hashE[:]), new(big.Int).SetBytes(hashD[:]))
+	linkKey = linkKey.Mod(linkKey, minN)
+	return linkKey
 }
 
-// getYr solve Enc(y_n xor Enc(y_n-1 xor... Enc(y_1 xor v))) = v to find y_r
-func getYr(pubkeys []*rsa.PublicKey, xs []*big.Int, index int, key []byte, v *big.Int) (*big.Int, error) {
-	ynf, err := cky(pubkeys[:index], xs[:index], key, v)
-	if err != nil {
-		return nil, err
-	}
-
-	vs := v.Bytes()
-	for i := len(pubkeys) - 1; i > index; i-- {
-		yd := xor(vs, key)
-		yi, err := asymmetricEncrypt(xs[i].Bytes(), pubkeys[i])
-		if err != nil {
-			return nil, err
-		}
-		vs = xor(yi, yd)
-	}
-
-	ydr := xor(vs, key)
-	yr := xor(ydr, ynf)
-	return new(big.Int).SetBytes(yr), nil
-}
-
-// cky Enc(y_n xor Enc(y_n-1 xor... Enc(y_1 xor v)))
-// Enc(m) = m xor key
-func cky(pubkeys []*rsa.PublicKey, xs []*big.Int, key []byte, v *big.Int) ([]byte, error) {
-	if len(pubkeys) != len(xs) {
-		return nil, fmt.Errorf("pubkeys length should be equal to xs length and greater than 1")
-	}
-
-	e := v.Bytes()
-	for i := 0; i < len(pubkeys); i++ {
-		yi, err := asymmetricEncrypt(xs[i].Bytes(), pubkeys[i])
-		if err != nil {
-			return nil, err
-		}
-		yvi := xor(yi, e)
-		e = xor(yvi, key)
-	}
-	return e, nil
-}
-
-// asymmetricEncrypt rsa encryption
-func asymmetricEncrypt(msg []byte, pubkey *rsa.PublicKey) ([]byte, error) {
-	ct, err := rsa.RSAEncrypt(new(big.Int).SetBytes(msg), pubkey)
-	return ct.Bytes(), err
-}
-
-// asymmetricDecrypt rsa decryption
-func asymmetricDecrypt(ciphertext []byte, privkey *rsa.PrivateKey) ([]byte, error) {
-	pt, err := rsa.RSADecrypt(new(big.Int).SetBytes(ciphertext), privkey)
-	return pt.Bytes(), err
-}
-
-// xor
-func xor(msg, key []byte) []byte {
-	return new(big.Int).Xor(new(big.Int).SetBytes(msg), new(big.Int).SetBytes(key)).Bytes()
-}
-
-// minN find minimum N among all pulic keys
+// minN find minimum N among all public keys
 func minN(keys []*rsa.PublicKey) *big.Int {
 	min := keys[0].N
 	for _, key := range keys {
