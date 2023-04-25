@@ -29,7 +29,7 @@ func HashToPoint(t *big.Int, tryTimes int) (*big.Int, *big.Int, error) {
 			return x, y, nil
 		}
 	}
-	return nil, nil, fmt.Errorf("failed to find ecc poing, try increase trying times")
+	return nil, nil, fmt.Errorf("failed to find ecc point, please increase trying times")
 }
 
 // y^2 = x^3 - 3x + b
