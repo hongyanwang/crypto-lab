@@ -1,4 +1,4 @@
-## Mutliple signature schemes
+## Multiple signature schemes
 
 1. `Group Signature`: One member can anonymously sign a message on behalf of the group. The administrator of the group have the ability to reveal the credential of the signer.
 
