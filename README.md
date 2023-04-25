@@ -6,8 +6,9 @@
 Golang implementation of cryptographic algorithms 
 
 ## 1. common
-- matrix: matrix operation mod P
 - crt: chinese remainder theorem
+- hash_to_point: hash prime filed number to ecc point
+- matrix: matrix operation mod P
 - polynomial: polynomial operations, including Lagrange interpolation
 
 ## 2. symmetric
