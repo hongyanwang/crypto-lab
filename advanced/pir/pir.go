@@ -69,7 +69,7 @@ func GenSearchMaterial(targetIdx *big.Int, pubkey *paillier.PublicKey, totalItem
 func GenEncGxFx(encVectors, coefGx, coefFx []*big.Int, pubkey *paillier.PublicKey) (*big.Int, *big.Int, error) {
 	// check length of encVectors, coefGx and coefFx
 	// length of encVectors and length of coefGx must be same
-	// length of encVectors is one smallerr than length of coefFx
+	// length of encVectors is one smaller than length of coefFx
 	if len(encVectors) != len(coefGx) {
 		return nil, nil, fmt.Errorf("length of encVectors[%d] and length of coefGx[%d] are not equal", len(encVectors), len(coefGx))
 	}
@@ -97,7 +97,7 @@ func GenEncGxFx(encVectors, coefGx, coefFx []*big.Int, pubkey *paillier.PublicKe
 	return encGx, encFx, nil
 }
 
-// RetrieveTargetValue retrieve target value by homomorhpic decryption
+// RetrieveTargetValue retrieve target value by homomorphic decryption
 // if F(x)=0, G(x) is the target value, otherwise target is not found
 func RetrieveTargetValue(encGx, encFx *big.Int, privkey *paillier.PrivateKey) (*big.Int, error) {
 	fx, err := paillier.Decrypt(encFx, privkey)
