@@ -1,4 +1,4 @@
-# Oblivious transfer
+# 1-out-of-2 Oblivious transfer
 Go implementation of Bellare-Micali oblivious transfer scheme based on Diffie-Hellman, supporting 1-out-2 scenario
 
 ## Tests
