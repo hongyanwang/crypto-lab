@@ -36,6 +36,7 @@ Golang implementation of cryptographic algorithms
 - ot: oblivious transfer based on RSA and ECC, supporting 1-out-of-2 and 1-out-of-n schemes
   - bellare_micali: Bellare-Micali 1-out-of-2 OT
   - bellare_micali_1_n: 1-out-of-n OT based on Bellare-Micali
+  - iknp 1-out-of-2^l OTE based on IKNP
   - ot_rsa: 1-out-of-2 OT based on RSA
 - pir: private information retrieval using homomorphic encryption and Lagrange interpolation
 - psi: private set intersection using DH OPRF
